@@ -3,7 +3,9 @@ const express = require('express');
 const app = express();
 const route = require('./routes/index.routes');
 const path = require('path');
+const cors = require('cors');
 
+app.use(cors({ origin: process.env.FRONT_URL }));
 app.use(express.json());
 app.use(route);
 app.use(express.static(path.join(__dirname, '../public')));
