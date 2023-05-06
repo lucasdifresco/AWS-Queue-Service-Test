@@ -1,6 +1,7 @@
 const controller = {};
-const connection = require('../dbConnection/connection')
-const TestModel = require('../models/test.model')
+const connection = require('../dbConnection/connection');
+const TestModel = require('../models/test.model');
+const queueController = require('./queue.controller');
 
 var queue = [];
 
@@ -128,11 +129,9 @@ controller.SubmitAnswer = async (req, res) =>{
 
         await test.save();
 
-        //BBDD.push({ test });
+        var testHeader = { testId, questionId }
+        await queueController.PushToQueue(JSON.stringify(testHeader));
 
-        //    PushAnswerToQueue(user, testId, questionId)
-        //        .OnError(() => { return res.status(500).send(`Error pushing answer ${answerId} of test ${testId} by user ${user} to queue`); })
-        //        .OnSuccess(() => { return res.status(200).send(`Answer ${answerId} of test ${testId} by user ${user} pushed to queue`); });
 
         return res.status(200).send(`Answer ${answerId} of test ${testId} by user ${user} pushed to queue. Submited: ${finished}`);
     } catch (err) {
@@ -169,7 +168,6 @@ controller.SubmitAnswerNoSQS = async (req, res) => {
         console.log(`Submit answer: user = ${user}, test = ${testId}, question = ${questionId}, answer = ${answerId}`);
 
         let tests = await TestModel.find();
-        console.log(tests);
         if (!tests) { return res.status(400).send(`Database conection error`); }
 
         let test = tests.find((t) => t.testId == testId);
@@ -199,7 +197,7 @@ controller.GetItemFromQueue = async (req, res) => {
         var item = queue.shift();
         if (item) { return res.status(200).send(item); }
 
-        return res.status(400).send(`Empty queue`);
+        return res.status(400).send(`Static Queue Empty`);
     }
     catch (err) {
         console.error(err)
@@ -251,7 +249,6 @@ controller.SubmitAnswerNoEDA = async (req, res) => {
         console.log(`Submit answer: user = ${user}, test = ${testId}, question = ${questionId}, answer = ${answerId}`);
 
         let tests = await TestModel.find();
-        console.log(tests);
         if (!tests) { return res.status(400).send(`Database conection error`); }
 
         let test = tests.find((t) => t.testId == testId);
